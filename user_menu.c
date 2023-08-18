@@ -6,39 +6,38 @@
 #include "definitions.h"
 
 int signup(int option, char* username, char* password){
-    //wtf is happening in signup
+    //create file of filename - username.txt
     char filename[BUFSIZE];
     strcpy(filename, username);
     char extension[5] = ".txt";
-    int fd;
     strncat(filename, extension, sizeof(extension));
-    fd = open(filename, O_WRONLY);
 
+    //check user doesn't exist
+    int fd = open(filename, O_WRONLY);
     if(fd != -1) 
         return -1;
-    else 
-        close(fd);
+    close(fd);
+
     fd = open(filename, O_WRONLY|O_CREAT, 0644);
     if(fd == -1){
         perror("signup"); 
         return -1;
     }
     struct user u;
-    strcpy(u.username,username);
-    strcpy(u.password,password);
+    strcpy(u.username, username);
+    strcpy(u.password, password);
     switch(option){
         case SIGNUPUSER :
-            strcpy(u.type,"normal");
+            strcpy(u.type, "normal");
             break;
         case ADDUSER :
-            strcpy(u.type,"normal");
+            strcpy(u.type, "normal");
             break;
-            //what is the difference between signupuser and adduser?
         case SIGNUPJOINT :
-            strcpy(u.type,"joint");
+            strcpy(u.type, "joint");
             break;
         case SIGNUPADMIN :
-            strcpy(u.type,"admin");
+            strcpy(u.type, "admin");
             break;
     }
     write(fd, &u, sizeof(struct user));

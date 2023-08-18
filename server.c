@@ -78,102 +78,84 @@ void *connection_handler(void *socket_desc)
 		printf("sock = %d\n",sock);
 		read( sock , option_string, sizeof(option_string)); 
 		option = atoi(option_string);
-		if (option == SIGNUPUSER || option == SIGNUPADMIN || option == SIGNUPJOINT){
-			read(sock, username, sizeof(username));
-			read(sock, password, sizeof(password));
-			int ret = signup(option,username,password);
-			if(ret == -1) 
-				return_message = "User could not be added\n";
-			else 
-				return_message = "User added successfully!\n";
-		}
-		else if (option == SIGNINUSER || option == SIGNINADMIN || option == SIGNINJOINT){
-			read(sock ,username, sizeof(username));
-			read(sock ,password, sizeof(password));
-			ret = signin(option,username,password);
-			if(ret == -1) 
-				return_message = "sign in failed\n";
-			else 
-				return_message = "successfully signed in!\n";
-		}
-		else if (option == DEPOSIT) {
+		switch(option){
+			case SIGNUPUSER:
+			case SIGNUPADMIN:
+			case SIGNUPJOINT:
+				read(sock, username, sizeof(username));
+				read(sock, password, sizeof(password));
+				int ret = signup(option,username,password);
+				if(ret == -1) 
+					return_message = "User could not be added\n";
+				else 
+					return_message = "User added successfully!\n";
+
+			case SIGNINUSER: 
+			case SIGNINADMIN: 
+			case SIGNINJOINT:
+				read(sock ,username, sizeof(username));
+				read(sock ,password, sizeof(password));
+				ret = signin(option,username,password);
+				if(ret == -1) 
+					return_message = "sign in failed\n";
+				else 
+					return_message = "successfully signed in!\n";
+
+			case DEPOSIT:
 			read(sock,amt_string,sizeof(amt_string));
 			deposit_amt = atoi(amt_string);
 			ret = deposit(username,deposit_amt);
 			if (ret == 0) 
 				return_message = "amount deposited\n";
-		}
-		else if (option == WITHDRAW) {
-			read(sock,amt_string,sizeof(amt_string));
-			withdraw_amt = atoi(amt_string);
-			ret = withdraw(username,withdraw_amt);
-			if (ret == -1) 
-				return_message = "unable to withdraw\n";
-			else 
-				return_message = "withdrew successfully\n";
-		}
-		else if (option == BALANCE) {
+
+			case WITHDRAW:
+				read(sock,amt_string,sizeof(amt_string));
+				withdraw_amt = atoi(amt_string);
+				ret = withdraw(username,withdraw_amt);
+				if (ret == -1) 
+					return_message = "unable to withdraw\n";
+				else 
+					return_message = "withdrew successfully\n";
+		
+			case BALANCE:
 			balance_amt = balance(username);
 			sprintf(return_message,"%d",balance_amt);
-		}
-		else if (option == PASSWORD) {
-			read(sock, password, sizeof(password));
-			ret = change_password (username, password);
-			if (ret == -1) 
-				return_message = "unable to change password\n";
-			else 
-				return_message = "changed password successfully\n";
-		}
-		else if (option == DETAILS) {
-			return_message = get_details(username);
-		}
-		else if(option == DELUSER) {
-			char* username = malloc(BUFSIZE*sizeof(char));
-			char* password = malloc(BUFSIZE*sizeof(char));
-			read(sock, username, sizeof(username));
-			ret = del_user(username);
-			printf("unlink returned %d\n",ret);
-			if (ret == -1) 
-				return_message = "unable to delete user\n";
-			else 	
-				return_message = "user deleted successfully\n";
-		}
-		else if(option == MODUSER) {
-			char* username = malloc(BUFSIZE*sizeof(char));
-			char* password = malloc(BUFSIZE*sizeof(char));
+		
+			case PASSWORD:
+				read(sock, password, sizeof(password));
+				ret = change_password (username, password);
+				if (ret == -1) 
+					return_message = "unable to change password\n";
+				else 
+					return_message = "changed password successfully\n";
+		
+			case DETAILS:
+				return_message = get_details(username);
+		
+			case DELUSER:
+				read(sock, username, sizeof(username));
+				ret = del_user(username);
+				printf("unlink returned %d\n",ret);
+				if (ret == -1) 
+					return_message = "unable to delete user\n";
+				else 	
+					return_message = "user deleted successfully\n";
+		
+			case MODUSER:
+				read(sock, username, sizeof(username));
+				read(sock, new_username, sizeof(new_username));
+				read(sock, password, sizeof(password));
 
-			read(sock, username, sizeof(username));
-			read(sock, new_username, sizeof(new_username));
-			read(sock, password, sizeof(password));
-
-			ret = modify_user (username, new_username, password);
-			if (ret == -1) 
-				return_message = "unable to change user\n";
-			else 
-				return_message = "changed user successfully\n";
-		}
-		else if (option == GETUSERDETAILS) {
-			char* username = malloc(BUFSIZE*sizeof(char));
-			read(sock, username, sizeof(username));
-			printf("username = %s\n", username);
-			return_message = get_details(username);
-		}
-		else if (option == ADDUSER) {
-			char* username = malloc(BUFSIZE*sizeof(char));
-			char* password = malloc(BUFSIZE*sizeof(char));
-			read(sock, type, sizeof(type));
-			read(sock, username, sizeof(username));
-			read(sock, password, sizeof(password));
-			printf("type = %s username = %s pwd = %s\n", type, username, password);
-			if(!strcmp(type,"1")) 
-				option = SIGNUPUSER;
-			else 
-				option = SIGNUPJOINT;
-			ret = signup(option, username, password);
-			if(ret == -1) 
-				return_message = "account could not be added\n";
-			else 
-				return_message = "successfully added account!\n";
+				ret = modify_user (username, new_username, password);
+				if (ret == -1) 
+					return_message = "unable to change user\n";
+				else 
+					return_message = "changed user successfully\n";
+		
+			case GETUSERDETAILS:
+				read(sock, username, sizeof(username));
+				printf("username = %s\n", username);
+				return_message = get_details(username);
 		}
 		send(sock, return_message, BUFSIZE * sizeof(char) , 0 ); 
 	}
